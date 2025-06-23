@@ -27,7 +27,8 @@ vi.mock("googleapis", () => ({
 }));
 vi.mock("@/lib/env", () => ({
   env: {
-    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    DATABASE_URL: inject("TEST_DATABASE_URL"),
+    POSTGRES_URL_NON_POOLING: inject("TEST_DATABASE_URL"),
     GOOGLE_CLIENT_ID: "test-client-id",
   },
 }));

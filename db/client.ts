@@ -22,7 +22,7 @@ declare global {
   var drizzleGlobal: DrizzleClientType | undefined;
 }
 
-const db = global.drizzleGlobal ?? createDbClient(env.POSTGRES_URL);
+const db = global.drizzleGlobal ?? createDbClient(env.DATABASE_URL);
 
 export { db };
 

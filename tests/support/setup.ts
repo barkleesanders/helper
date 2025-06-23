@@ -2,11 +2,12 @@ import { truncateDb } from "@tests/support/setupDatabase";
 import { afterAll, beforeAll, beforeEach, inject, vi } from "vitest";
 
 beforeAll(() => {
-  vi.stubEnv("POSTGRES_URL", inject("TEST_DATABASE_URL"));
+  vi.stubEnv("DATABASE_URL", inject("TEST_DATABASE_URL"));
 
   vi.mock("@/lib/env", () => ({
     env: {
-      POSTGRES_URL: inject("TEST_DATABASE_URL"),
+      DATABASE_URL: inject("TEST_DATABASE_URL"),
+      POSTGRES_URL_NON_POOLING: inject("TEST_DATABASE_URL"), // Assuming non-pooling is same for tests
       CRYPTO_SECRET: "secret",
       ENCRYPT_COLUMN_SECRET: "2319a2b757d52982035248289cb0fe27",
       AUTH_URL: "http://localhost:1234",

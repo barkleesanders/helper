@@ -3,7 +3,8 @@ import { proxyExternalContent } from "@/lib/proxyExternalContent";
 
 vi.mock("@/lib/env", () => ({
   env: {
-    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    DATABASE_URL: inject("TEST_DATABASE_URL"),
+    POSTGRES_URL_NON_POOLING: inject("TEST_DATABASE_URL"),
     PROXY_SECRET_KEY: "test-secret-key",
     PROXY_URL: "https://proxy.helperai.com",
     AUTH_URL: "https://helper.ai",
