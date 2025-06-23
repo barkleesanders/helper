@@ -17,37 +17,57 @@ const formatters = {
     minutes: (n: number) => `${n}m`,
   },
   long: {
-    years: (n: number) => `${n} ${n === 1 ? "year" : "years"} ago`,
-    months: (n: number) => `${n} ${n === 1 ? "month" : "months"} ago`,
-    days: (n: number) => `${n} ${n === 1 ? "day" : "days"} ago`,
-    hours: (n: number) => `${n} ${n === 1 ? "hour" : "hours"} ago`,
-    minutes: (n: number) => `${n} ${n === 1 ? "minute" : "minutes"} ago`,
+    years: (n: number) => `${n} ${n === 1 ? "year" : "years"}`,
+    months: (n: number) => `${n} ${n === 1 ? "month" : "months"}`,
+    days: (n: number) => `${n} ${n === 1 ? "day" : "days"}`,
+    hours: (n: number) => `${n} ${n === 1 ? "hour" : "hours"}`,
+    minutes: (n: number) => `${n} ${n === 1 ? "minute" : "minutes"}`,
   },
 };
 
-type Formatter = (typeof formatters)["short" | "long"];
+type FormatterCollection = typeof formatters;
+type FormatType = keyof FormatterCollection;
+type Formatter = FormatterCollection[FormatType];
 
-const calculateCurrentTime = (time: Date, now: Date, formatter: Formatter) => {
+const calculateCurrentTime = (time: Date, now: Date, format: FormatType) => {
   const duration = intervalToDuration({ start: time, end: now });
+  const currentFormatters = formatters[format];
 
-  if (duration.years && duration.years > 0) return formatter.years(duration.years);
-  if (duration.months && duration.months > 0) return formatter.months(duration.months);
+  if (format === "long") {
+    if (duration.years && duration.years > 0) return `${currentFormatters.years(duration.years)} ago`;
+    if (duration.months && duration.months > 0) return `${currentFormatters.months(duration.months)} ago`;
+    if (duration.days && duration.days > 0) {
+      let dayStr = currentFormatters.days(duration.days);
+      if (duration.hours && duration.hours > 0) {
+        dayStr += `, ${currentFormatters.hours(duration.hours)}`;
+      }
+      return `${dayStr} ago`;
+    }
+    if (duration.hours && duration.hours > 0) return `${currentFormatters.hours(duration.hours)} ago`;
+    // For "just now" vs "X minutes ago"
+    if (duration.minutes && duration.minutes > 0) return `${currentFormatters.minutes(duration.minutes)} ago`;
+    return "just now";
+  }
+
+  // Short format logic (remains largely the same as original effective logic)
+  if (duration.years && duration.years > 0) return currentFormatters.years(duration.years);
+  if (duration.months && duration.months > 0) return currentFormatters.months(duration.months);
   if (duration.days && duration.days > 0) {
     const hours = duration.hours || 0;
-    return `${formatter.days(duration.days)}${hours > 0 ? ` ${formatter.hours(hours)}` : ""}`;
+    return `${currentFormatters.days(duration.days)}${hours > 0 ? ` ${currentFormatters.hours(hours)}` : ""}`;
   }
-  if (duration.hours && duration.hours > 0) return formatter.hours(duration.hours);
-  if (duration.minutes && duration.minutes > 0) return formatter.minutes(duration.minutes);
-  return "now";
+  if (duration.hours && duration.hours > 0) return currentFormatters.hours(duration.hours);
+  if (duration.minutes && duration.minutes > 0) return currentFormatters.minutes(duration.minutes);
+  return "now"; // "now" for short format, vs "just now" for long
 };
 
 const HumanizedTime = ({ time, titlePrefix, className, format = "short" }: HumanizedTimeProps) => {
   const now = useNow();
 
   const date = new Date(time);
-  const formatter = formatters[format];
+  // const formatter = formatters[format]; // No longer need to pass formatter object
 
-  const currentTime = calculateCurrentTime(date, now, formatter);
+  const currentTime = calculateCurrentTime(date, now, format); // Pass format string directly
 
   const longDate = date.toLocaleString("en-US", {
     weekday: "long",

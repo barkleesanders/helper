@@ -2,9 +2,10 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import LoadingSpinner from "@/components/loadingSpinner"; // Import the spinner
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-[.60]",
+  "relative inline-flex items-center justify-center rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-[.60]",
   {
     variants: {
       variant: {
@@ -67,19 +68,43 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   desktop?: boolean;
+  loading?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, iconOnly, asChild = false, desktop, tabIndex, ...props }, ref) => {
+  (
+    { className, variant, size, iconOnly, asChild = false, desktop, tabIndex, loading = false, children, ...props },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : "button";
+
+    const getSpinnerSize = () => {
+      if (iconOnly) {
+        if (size === "lg") return "md";
+        return "sm";
+      }
+      // For buttons with text, always use 'sm' spinner to be less intrusive.
+      return "sm";
+    };
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, iconOnly, className }))}
+        className={cn(buttonVariants({ variant, size, iconOnly, className }), {
+          "cursor-wait": loading, // Optional: change cursor when loading
+        })}
         ref={ref}
         tabIndex={tabIndex}
         data-desktop={desktop}
+        disabled={loading || props.disabled}
         {...props}
-      />
+      >
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <LoadingSpinner size={getSpinnerSize()} />
+          </div>
+        )}
+        <span className={cn({ "opacity-0": loading })}>{children}</span>
+      </Comp>
     );
   },
 );
