@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
 import { AssigneeFilter } from "./filters/assigneeFilter";
@@ -25,6 +26,8 @@ interface FilterValues {
 interface ConversationFiltersProps {
   filterValues: FilterValues;
   onUpdateFilter: (updates: Partial<FilterValues>) => void;
+  onClearFilters: () => void;
+  activeFilterCount: number;
 }
 
 export const useConversationFilters = () => {
@@ -78,19 +81,40 @@ export const useConversationFilters = () => {
     debouncedSetFilters(updates);
   };
 
+  const clearFilters = () => {
+    const clearedFilters = {
+      assignee: null,
+      createdAfter: null,
+      createdBefore: null,
+      repliedBy: null,
+      customer: null,
+      isVip: null,
+      isPrompt: null,
+      reactionType: null,
+      events: null,
+    };
+    setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
+  };
+
   return {
     filterValues,
     activeFilterCount,
     updateFilter,
+    clearFilters,
   };
 };
 
-export const ConversationFilters = ({ filterValues, onUpdateFilter }: ConversationFiltersProps) => {
+export const ConversationFilters = ({
+  filterValues,
+  onUpdateFilter,
+  activeFilterCount,
+  onClearFilters,
+}: ConversationFiltersProps) => {
   return (
-    <div className="flex flex-wrap justify-center gap-1 md:gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
       <DateFilter
-        initialStartDate={filterValues.createdAfter}
-        initialEndDate={filterValues.createdBefore}
+        startDate={filterValues.createdAfter}
+        endDate={filterValues.createdBefore}
         onSelect={(startDate, endDate) => {
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
@@ -114,6 +138,11 @@ export const ConversationFilters = ({ filterValues, onUpdateFilter }: Conversati
       />
       <EventFilter selectedEvents={filterValues.events} onChange={(events) => onUpdateFilter({ events })} />
       <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => onUpdateFilter({ isPrompt })} />
+      {activeFilterCount > 0 && (
+        <Button data-testid="clear-filters-button" variant="ghost" onClick={onClearFilters}>
+          Clear filters
+        </Button>
+      )}
     </div>
   );
 };

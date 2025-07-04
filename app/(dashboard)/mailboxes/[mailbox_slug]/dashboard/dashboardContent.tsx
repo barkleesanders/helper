@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/peopleTable";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/reactionsChart";
 import { useIsMobile } from "@/components/hooks/use-mobile";
@@ -15,14 +16,13 @@ export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
 
 type Props = {
   mailboxSlug: string;
-  currentMailbox: { name: string; slug: string };
 };
 
 const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false });
 
-export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
+export function DashboardContent({ mailboxSlug }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
-  const [customDate, setCustomDate] = useState<Date>();
+  const [customDate, setCustomDate] = useState<DateRange>();
   const isMobile = useIsMobile();
 
   return (
@@ -43,13 +43,14 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
                 }
               }}
               customDate={customDate}
-              onCustomDateChange={setCustomDate}
+              onCustomDateChange={(date) => setCustomDate(date)}
+              mailboxSlug={mailboxSlug}
             />
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             <Panel className="h-[800px] md:h-[400px] md:col-span-2">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex flex-col">
+                <div className="flex flex-col h-full">
                   <h4 className="scroll-m-20 mb-2 text-sm font-semibold tracking-tight uppercase">Ticket Status</h4>
                   <StatusByTypeChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
                 </div>

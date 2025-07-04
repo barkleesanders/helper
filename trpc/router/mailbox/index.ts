@@ -1,5 +1,5 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, isNotNull, isNull, sql, SQL } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
@@ -7,7 +7,6 @@ import { triggerEvent } from "@/jobs/trigger";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
-import { protectedProcedure } from "@/trpc/trpc";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
@@ -15,6 +14,7 @@ import { githubRouter } from "./github";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
+import { savedRepliesRouter } from "./savedReplies";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
@@ -22,17 +22,6 @@ import { websitesRouter } from "./websites";
 export { mailboxProcedure };
 
 export const mailboxRouter = {
-  list: protectedProcedure.query(async () => {
-    const allMailboxes = await db.query.mailboxes.findMany({
-      where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
-      columns: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-    });
-    return allMailboxes;
-  }),
   openCount: mailboxProcedure.query(async ({ ctx }) => {
     const countOpenStatus = async (where?: SQL) => {
       const result = await db
@@ -144,6 +133,8 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
+  savedReplies: savedRepliesRouter,
+
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
       throw new TRPCError({
